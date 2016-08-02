@@ -1,0 +1,283 @@
+<html>
+    <head>
+        <title>VML Lonely Hearts Club Javascript Test</title>
+        
+        <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.js"></script>
+        <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.8.16/jquery-ui.js"></script>
+        
+        <!-- Given Styling -->
+        <style type="text/css">
+            /* If you where to give an image as the spec, this could be part of the CSS testi, but this is fairly simple */
+            /* Else for a pure javascript test, the CSS can be provided along with the HTML */
+            .slideshow *          { padding: 0; margin: 0; }
+            .slideshow            { position: relative; width: 500px; height: 250px; margin: 2em; }
+            .slideshow .image img { position: absolute; top: 0; left: 0; width: 350px; overflow: hidden; }
+            .slideshow ul.menu    { display: block; position: absolute; top: 0; left: 350px; width: 150px; }
+            .slideshow ul.menu li { display: block; width: 150px; line-height: 50px; text-align: center; background: gray; font-weight: bold; }
+            .slideshow ul.menu li.selected       { background: #3399ff; }
+            .slideshow ul.menu li.canClick:hover { background: #3399ff; text-decoration: underline }
+        </style>
+
+        <!-- Answer Styling -->
+        <style type="text/css">
+
+        </style>
+
+        <!-- Part 1: Answer Javascript -->
+        <script type="text/javascript">
+            // The following are things we are looking for:
+            // - Ability to use raw javascript classes and knowledge of .prototype
+            // - Ability to do cache/localize DOM lookups in advance rather than constant document level DOM queries - optimization
+            // - Ability to use setTimeout() and clearTimeout()
+            // - Ability to use semaphores to control asyncronous events
+            // - Ability to document and produce easy to read and well formatted code - code is an art, it should be beautiful 
+            // - Ability to use general jQuery functions
+            // - Ability to read the spec
+            // - Ability to use arrays and javascript hashes - I created an entire test part 2 just to test this!
+            // - Ability to dynamically generate HTML from data structures
+            // - Ability to dynamically load classes from data
+
+
+            // +2 point bonus for knowing how to create raw javascript classes and the use of .prototype without an external class libary
+            var Slideshow = function(element) {
+                var self = this;                                               
+
+                // NOTE: all instance variables must be declared in the constructor.
+                //       anything declared as .prototype is a class variable/function
+
+                // -1 point lost for not precaching DOM lookups
+                // +2 point bonus if they index data-position lookups via a hash or array (not done here)
+                this.slideshow  = $(element);
+                this.imageNodes = this.slideshow.find(".image img");
+                this.menuNodes  = this.slideshow.find(".menu li");
+                
+                this.currentPos = Number(this.menuNodes.filter(".selected").attr("data-position")) || 1; // 1/2 point lost if they simply assume 1
+                this.slideCount = this.menuNodes.length;                                                 // 1/2 point lost of they hardcode 5
+
+                this.selectedMenu  = this.menuNodes.filter("[data-position="+this.currentPos+"]");
+                this.selectedImage = this.imageNodes.filter("[data-position="+this.currentPos+"]");
+
+                this._loopTimeoutId  = null;
+                this._slideSemaphore = 0;
+
+                this.menuNodes.bind("click", function(event) {
+                    var pos = $(this).attr("data-position");
+                    if( pos ) {
+                        self.selectSlide(pos);
+                    }
+                }).addClass("canClick");
+
+                this.imageNodes.not(this.selectedImage).hide();
+                this.setLoopTimeout();
+            };
+
+            /**
+             *  +2 bonus points for proper documentation of functions, including parameters
+             *
+             *  Transitions to the slide for a given data-position
+             *  It is safe to call this function multiple times before 
+             *  @param {Number}   pos       the data-position of the slide to be selected
+             *  @param {Function} callback  [optional] callback function to be called once slide has been successfully selected   
+             */
+            Slideshow.prototype.selectSlide = function( pos, callback ) {
+                var self = this;
+                if( Number(pos) === Number(this.currentPos) ) { // +1 point for correct use of === meaning type and value the same 
+                    this.setLoopTimeout(); // reset timer
+                    return; 
+                } 
+
+                var menuNode  = this.menuNodes.filter("[data-position="+pos+"]");
+                var imageNode = this.imageNodes.filter("[data-position="+pos+"]");
+
+                if( menuNode.length === 0 && imageNode.length === 0 ) { return; } // 1/2 point for validating function parameters
+
+                this.menuNodes.removeClass("selected");
+                this.selectedMenu = menuNode.addClass("selected");
+
+                // -2 points lost if not using some form of semaphore to ensure multiple callbacks are not being concurrently triggered
+                //    Main way to test this is lots of random clicks, especally during transitions
+                var _slideSemaphore = ++this._slideSemaphore;
+                clearTimeout( this._loopTimeoutId );
+                
+                this.imageNodes.not(this.selectedImage).hide(); // Added robustness    
+                this.selectedImage.fadeOut("slow", function() { 
+                    if( _slideSemaphore !== self._slideSemaphore ) { return; }    
+                    imageNode.fadeIn("slow", function() {
+                        if( _slideSemaphore !== self._slideSemaphore ) { return; }
+                        
+                        self.setLoopTimeout();
+                        if( callback instanceof Function ) { 
+                            callback(); // optional, but need to validate instanceof Function if called
+                        } 
+                    });
+                });
+                
+                this.currentPos    = pos;
+                this.selectedMenu  = menuNode; 
+                this.selectedImage = imageNode;
+            };
+
+
+            /**
+             *  Transitions to the next slide after a given timeout
+             *  @param {Number} timeout [default: 1000]
+             */
+            Slideshow.prototype.setLoopTimeout = function( timeout ) {
+                var self = this;
+                timeout = timeout || 1000;
+
+                // -2 points lost if not using clearTimeout() - required to make app robust when also clicking
+                clearTimeout( this._loopTimeoutId );      
+                this._loopTimeoutId = setTimeout(function() {
+                    self.selectSlide( self.getNextSlidePos() );
+                }, timeout);
+            };
+
+            /**
+             *  Calculates the data-position of the next slide in the loop
+             *  @return {Number} data-position of the next slide in the loop
+             */
+            Slideshow.prototype.getNextSlidePos = function() {
+                //$(this.menuNodes.filter(".selected").next()[0] || this.menuNodes.first()[0]).attr("data-position") // another valid method 
+                return (this.currentPos % this.slideCount) + 1; // Note we are 1 indexed here, not 0 indexed 
+            };
+
+
+            // We are currently in the <head> thus $(document).ready() is required, -1 point for missing this 
+            $(document).ready(function() {
+                // .each() or for loop required to treat each individual slideshow seperately
+                $(".slideshow").each(function() {
+                    new Slideshow(this);
+                });
+            });
+        </script>  
+
+
+
+
+        <!-- Part 2: setup -->
+        <script type="text/javascript">
+            var json = {
+                "Slideshow": [{
+                    "class": ["slideshow"],
+                    "selected": 3,
+                    "items": {
+                        "Item 1": "http://placehold.it/350x200&text=Page+1",
+                        "Item 2": "http://placehold.it/350x200&text=Page+2",
+                        "Item 3": "http://placehold.it/350x200&text=Page+3",
+                        "Item 4": "http://placehold.it/350x200&text=Page+4"
+                    }
+                }]
+            };
+        </script>
+        <!-- Part 2: Answer -->
+        <script type="text/javascript">     
+            /**
+             *  @param  {Hash}   { selected: <Number>, items: { <label>: <url> } 
+             *  @return {String} html  
+             */ 
+            var generateSlideshowHTML = function(widget) { 
+                var html = "<div class='"+$.makeArray(widget['class']).join(' ')+"'>";  // +1 class is a reserved word, must always be quoted when used as a key
+                                                                                        // -1 for not using $.makeArray() or similar. widget['class'].join() is a null pointer if class: null
+                var position = 1; // -1/2 point for starting data-position at 0, unless pre-incrementing
+                html += "<div class='image'>";
+                for( var label in widget.items ) {
+                    var url = widget.items[label]; // Testing here the ability to use both keys and values from a hash
+                    html += "<img src='"+url+"' data-position='"+(position++)+"'/>";
+                }
+                html += "</div>";
+                
+                position = 1; // -2 points if outputi HTML data-position="" doesn't match up with images
+                html += "<ul class='menu'>";
+                for( var label in widget.items ) {     
+                    var selected = (position === widget.selected) ? " selected='selected'" : ""; // remember we are 1-indexed
+                    html += "<li data-position='"+(position++)+"'>"+label+"</li>";
+                }
+                html += "</ul>";
+                
+                html += "</div>";
+                return html;
+            }
+
+            /**
+             *  Parses JSON data hash, appends generated HTML into rootNode and dynamically initalizes javascript widgets 
+             *  @param {Hash}   json
+             *  @param {jQuery} rootNode 
+             */
+            var initJSON = function(json, rootNode) {
+                for( var widgetName in json ) {
+                    for( var i=0, n=json[widgetName].length; i<n; i++ ) { // +1 bonus for using i<n as condition
+                        var widgetData = json[widgetName][i];
+                        var html = generateSlideshowHTML(widgetData); // +1 for abstracting html generation from javascript initalizion
+                        var node = $(html).appendTo(rootNode);
+                        
+                        // +2 for dynamically loading the widget class, and validating it exists 
+                        if( typeof window[widgetName] === "function" ) { 
+                            new window[widgetName](node); 
+                        }
+                    }
+                }
+            }
+
+            // -1 for not putting this in $(document).ready() or at least near closing </html> tag
+            $(document).ready(function() {
+                initJSON( json, $("#part2") );
+            });
+
+        </script>
+    </head>
+    <body>
+        <h1>VML Lonely Hearts Club Javascript Test</h1>
+        <div class="task">
+            <h3>Part 1 - Asynchronous Communication</h3>
+          
+            <p>Below is sample HTML for our slideshow widget. The spec is as follows:</p>
+            <ul>         
+                <li>Slideshow class should be called "Slideshow"</li>
+                <li>Slideshow continuiously loops between slides: 1,2,3,4,5,1,2...</li>
+                <li>Slideshow should transition to the next slide, one second after the last transition has completed</li>
+                <li>Slideshow should start automattically once the page loads</li>
+                <li>Multiple slideshows on the page should be supported</li>
+                <li>Transitions between slides should use $(element).fadeOut("slow", callback) and $(element).fadeIn("slow", callback)</li>
+                <li>The menu item should marked as class="selected" before the start of each transition</li>
+                <li>If the user clicks on any of the menu items, the slideshow should immediatly start a transition to the selected slide</li> 
+                <li>The menu items should have hover states highlighted</li> 
+                <li>Widget should be robust, user should not be able to break it, even if they try</li>
+                <li>You have a recent version of jQuery (v1.7.1) and jQuery UI (1.8.2) available</li>
+                <li>Reference implementation of test took 2 1/2 hours to code.</li> 
+            </ul>
+            
+            <h3>Part 2 - Dancing With Data</h3>
+            <p>Based on the json provided, dynamically generate HTML for a second slideshow widget further down the page and initalize it using the javascript written in part 1</p>
+            <ul>
+                <li>The top level key "Slideshow" represents the javascript widget being initalized</li>
+                <li>Multiple widgets of the same class can be initalized at the same time</li>
+                <li>class: ["slideshow"], refers to the css classes attached to the parent div</li>
+                <li>selected: 3, refers to the menu item that should be initally selected</li>
+                <li>items: { "menu-label": "slide-url" }</li>
+                <li>Reference implementation of test took 3/4 hours to code.</li> 
+            </ul>
+        </div>
+        <div id="part1">
+            <div class="slideshow">
+                <div class="image">
+                    <img src="http://placehold.it/350x250&text=Slide+1" data-position="1"/>
+                    <img src="http://placehold.it/350x250&text=Slide+2" data-position="2"/>
+                    <img src="http://placehold.it/350x250&text=Slide+3" data-position="3"/>
+                    <img src="http://placehold.it/350x250&text=Slide+4" data-position="4"/>
+                    <img src="http://placehold.it/350x250&text=Slide+5" data-position="5"/>
+                </div>
+                <ul class="menu">
+                    <li data-position="1" class="selected">Slide 1</li>
+                    <li data-position="2">Slide 2</li>
+                    <li data-position="3">Slide 3</li>
+                    <li data-position="4">Slide 4</li>
+                    <li data-position="5">Slide 5</li>
+                </ul>
+            </div>            
+        </div>
+        <div id="part2">            
+        
+        </div>
+    </body>
+</html>

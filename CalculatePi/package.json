@@ -1,0 +1,6 @@
+{
+    "name": "pi.js",
+    "dependencies": {
+        "underscore": "*"
+    }
+}

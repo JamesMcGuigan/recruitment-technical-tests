@@ -1,0 +1,112 @@
+<html>
+<head>
+<title>Radical Design UI Test Implementation</title>
+<script type="text/javascript">
+function highlightRow(id,row){
+	var rowTo = document.getElementById(row);	
+	if(document.getElementById(id).checked) {
+		rowTo.style.backgroundColor = '#6c6c6c';	
+	}
+	else {
+		rowTo.style.backgroundColor = '#ffffff';	
+	}
+}
+
+function rowClick(row) {
+	var rowTo = document.getElementById(row);	
+	if(rowTo.className == "grayDivRow") {
+		rowTo.className = "varDivRow";	
+	}
+	else {
+		rowTo.className = "grayDivRow";	
+	}
+}
+
+</script>
+<style type="text/css">
+#bar {
+	height: 10px;
+	bottom:5px;
+}
+
+div.varDivRow {
+	background-color: #ffffff;
+}
+
+tr.varTRow {
+	width: 100%;
+	
+	color: #6ec1b0;
+}
+
+div.grayDivRow {
+	width:100%;
+	background-color: #6c6c6c;
+	color: #6ec1b0;
+}
+
+td.number {
+	width: 20px;
+	text-align: right;
+}
+</style>
+</head>
+<body>
+<h1>Variables</h1>
+<div id="variableArea">
+	<div id='row1' class='varDivRow'>
+		<table>
+			<tr class='varTRow' >
+				<td onclick="javascript:rowClick('row1')">Variable01</td>
+				<td id='bar' onclick="javascript:rowClick('row1')"><img src='bar.png' width='80%' height='10px' onmouseover="this.src='barred.png'" onmouseout="this.src='bar.png'"/>   80%</td>
+				<td><input id='checkbox1' type='checkbox' onclick="javascript:highlightRow('checkbox1','row1')"/></td>
+			</tr>
+		</table>
+	</div>
+		<div id='row2' class='varDivRow'>
+		<table>
+			<tr class='varTRow'>
+				<td onclick="javascript:rowClick('row2')">Variable01</td>
+				<td id='bar' onclick="javascript:rowClick('row2')"><img src='bar.png' width='75%' height='10px' onmouseover="this.src='barred.png'" onmouseout="this.src='bar.png'"/>   75%</td>
+				<td><input id='checkbox2' type='checkbox'  onclick="javascript:highlightRow('checkbox2','row2')"/></td>
+			</tr>
+		</table>
+		</div>
+		<div id='row3' class='varDivRow'>
+		<table>
+			<tr class='varTRow'>
+				<td onclick="javascript:rowClick('row3')">Variable01</td>
+				<td id='bar' onclick="javascript:rowClick('row3')"><img src='bar.png' width='70%' height='10px' onmouseover="this.src='barred.png'" onmouseout="this.src='bar.png'"/>   70%</td>
+				<td><input id='checkbox3' type='checkbox'  onclick="javascript:highlightRow('checkbox3','row3')"/></td>
+			</tr>
+		</table>
+		</div>
+		<div id='row4' class='varDivRow'>
+		<table>
+			<tr class='varTRow'>
+				<td onclick="javascript:rowClick('row4')">Variable01</td>
+				<td id='bar' onclick="javascript:rowClick('row4')"><img src='bar.png' width='65%' height='10px' onmouseover="this.src='barred.png'" onmouseout="this.src='bar.png'"/>   65%</td>
+				<td><input id='checkbox4' type='checkbox'  onclick="javascript:highlightRow('checkbox4','row4')"/></td>
+			</tr>
+		</table>
+		</div>
+		<div id='row5' class='varDivRow'>
+		<table>
+			<tr class='varTRow'>
+				<td onclick="javascript:rowClick('row5')">Variable01</td>
+				<td id='bar' onclick="javascript:rowClick('row5')"><img src='bar.png' width='60%' height='10px' onmouseover="this.src='barred.png'" onmouseout="this.src='bar.png'"/>   60%</td>
+				<td><input id='checkbox5' type='checkbox'  onclick="javascript:highlightRow('checkbox5','row5')"/></td>
+			</tr>
+		</table>
+		</div>
+		<div id='row6' class='varDivRow'>
+		<table>
+			<tr class='varTRow'>
+				<td onclick="javascript:rowClick('row6')">Variable01</td>
+				<td id='bar' onclick="javascript:rowClick('row6')"><img src='bar.png' width='55%' height='10px' onmouseover="this.src='barred.png'" onmouseout="this.src='bar.png'"/>   55%</td>
+				<td><input id='checkbox6' type='checkbox'  onclick="javascript:highlightRow('checkbox6','row6')"/></td>
+			</tr>
+		</table>
+		</div>
+</body>
+</html>

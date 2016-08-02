@@ -1,0 +1,49 @@
+<html>
+    <head>
+        <title>PlayfishLikeButton by James McGuigan</title>
+        <script type="text/javascript" src="PlayfishLikeButton.js"></script>
+        <style>
+            h1 { font-size: 1.1em; }                                                           
+            #flashcontent { border: 1px solid black; height: 400px; width: 500px; margin: 1em; float: left; }
+            #divcontent   { border: 1px solid black; height: 400px; width: 500px; margin: 1em; float: left; }
+        </style>
+    </head>
+    <body>
+        <h1>PlayfishLikeButton by James McGuigan</h1>
+        <div id="flashcontent">
+        </div>
+        
+        <div id="divcontent">
+        </div>
+
+        <script>
+        (function() { // private namespace
+            Playfish.LikeButton.instances = {};
+            Playfish.LikeButton.instances.flashcontent = new Playfish.LikeButton();
+            Playfish.LikeButton.instances.divcontent   = new Playfish.LikeButton({ parentNodeId: "divcontent", position: { left: 10, top: 325 }});
+
+            Playfish.LikeButton.instances.flashcontent.show();
+            Playfish.LikeButton.instances.divcontent.show("http://www.playfish.com");
+
+            Playfish.LikeButton.instances.divcontent.afterLoad(function() {
+                Playfish.LikeButton.instances.divcontent.animate({
+                    endTop:    10,
+                    endLeft:  200,
+                    stepTop: -0.5,
+                    stepLeft:   1
+                }, function() {                
+                    Playfish.LikeButton.instances.divcontent.animate({
+                        endTop:    10,
+                        endLeft:   10,
+                        stepTop:    0,
+                        stepLeft:  -1
+                    }, function() { Playfish.LikeButton.instances.divcontent.afterLoad(function() {
+                        alert("Test Complete!");
+                    })});             
+                });
+            });
+        })();
+
+        </script>
+    </body>
+</html>

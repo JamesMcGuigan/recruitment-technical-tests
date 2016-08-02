@@ -1,0 +1,105 @@
+<html>
+    <head>
+        <title>VML Lonely Hearts Club Javascript Test</title>
+        
+        <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.js"></script>
+        <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.8.16/jquery-ui.js"></script>
+        
+        <!-- Given Styling -->
+        <style type="text/css">
+            .slideshow *          { padding: 0; margin: 0; }
+            .slideshow            { position: relative; width: 500px; height: 250px; margin: 2em; }
+            .slideshow .image img { position: absolute; top: 0; left: 0; width: 350px; overflow: hidden; }
+            .slideshow ul.menu    { display: block; position: absolute; top: 0; left: 350px; width: 150px; }
+            .slideshow ul.menu li { display: block; width: 150px; line-height: 50px; text-align: center; background: gray; font-weight: bold; }
+            .slideshow ul.menu li.selected       { background: #3399ff; }
+            .slideshow ul.menu li.canClick:hover { background: #3399ff; text-decoration: underline }
+        </style>
+
+        <!-- Answer Styling -->
+        <style type="text/css">
+
+        </style>
+
+        <!-- Part 1: Answer Javascript -->
+        <script type="text/javascript">
+        </script>  
+
+
+
+
+        <!-- Part 2: setup -->
+        <script type="text/javascript">
+            var json = {
+                "Slideshow": [{
+                    "class": ["slideshow"],
+                    "selected": 3,
+                    "items": {
+                        "Item 1": "http://placehold.it/350x200&text=Page+1",
+                        "Item 2": "http://placehold.it/350x200&text=Page+2",
+                        "Item 3": "http://placehold.it/350x200&text=Page+3",
+                        "Item 4": "http://placehold.it/350x200&text=Page+4"
+                    }
+                }]
+            };
+        </script>
+        
+        <!-- Part 2: Answer -->
+        <script type="text/javascript">     
+        </script>
+    </head>
+    <body>
+        <h1>VML Lonely Hearts Club Javascript Test</h1>
+        <div class="task">
+            <h3>Part 1 - Asynchronous Communication</h3>
+          
+            <p>Below is sample HTML for our slideshow widget. The spec is as follows:</p>
+            <ul>         
+                <li>Slideshow class should be called "Slideshow"</li>
+                <li>Slideshow continuiously loops between slides: 1,2,3,4,5,1,2...</li>
+                <li>Slideshow should transition to the next slide, one second after the last transition has completed</li>
+                <li>Slideshow should start automattically once the page loads</li>
+                <li>Multiple slideshows on the page should be supported</li>
+                <li>Transitions between slides should use $(element).fadeOut("slow", callback) and $(element).fadeIn("slow", callback)</li>
+                <li>The menu item should marked as class="selected" before the start of each transition</li>
+                <li>If the user clicks on any of the menu items, the slideshow should immediatly start a transition to the selected slide</li> 
+                <li>The menu items should have hover states highlighted</li> 
+                <li>Widget should be robust, user should not be able to break it, even if they try</li>
+                <li>You have a recent version of jQuery (v1.7.1) and jQuery UI (1.8.2) available</li>
+                <li>Reference implementation of test took 2 1/2 hours to code.</li> 
+            </ul>
+            
+            <h3>Part 2 - Dancing With Data</h3>
+            <p>Based on the json provided, dynamically generate HTML for a second slideshow widget further down the page and initalize it using the javascript written in part 1</p>
+            <ul>
+                <li>The top level key "Slideshow" represents the javascript widget being initalized</li>
+                <li>Multiple widgets of the same class can be initalized at the same time</li>
+                <li>class: ["slideshow"], refers to the css classes attached to the parent div</li>
+                <li>selected: 3, refers to the menu item that should be initally selected</li>
+                <li>items: { "menu-label": "slide-url" }</li>
+                <li>Reference implementation of test took 3/4 hours to code.</li> 
+            </ul>
+        </div>
+        <div id="part1">
+            <div class="slideshow">
+                <div class="image">
+                    <img src="http://placehold.it/350x250&text=Slide+1" data-position="1"/>
+                    <img src="http://placehold.it/350x250&text=Slide+2" data-position="2"/>
+                    <img src="http://placehold.it/350x250&text=Slide+3" data-position="3"/>
+                    <img src="http://placehold.it/350x250&text=Slide+4" data-position="4"/>
+                    <img src="http://placehold.it/350x250&text=Slide+5" data-position="5"/>
+                </div>
+                <ul class="menu">
+                    <li data-position="1" class="selected">Slide 1</li>
+                    <li data-position="2">Slide 2</li>
+                    <li data-position="3">Slide 3</li>
+                    <li data-position="4">Slide 4</li>
+                    <li data-position="5">Slide 5</li>
+                </ul>
+            </div>            
+        </div>
+        <div id="part2">            
+        
+        </div>
+    </body>
+</html>

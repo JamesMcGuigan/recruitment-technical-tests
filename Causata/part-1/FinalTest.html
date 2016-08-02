@@ -1,0 +1,158 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+    <head>
+        <meta http-equiv="X-UA-Compatible" content="edge" />
+
+        <title>Causta HTML Test</title>
+        <style> 
+            html {
+                height:     100%;
+                background: gray;
+            }
+            body {
+                height:     100%;
+            }
+            .white {       
+                height:     100%;
+                min-width:  320px;
+                min-height: 420px;
+                background: white; 
+                margin:     100px;
+                position: relative;
+            }
+            .red, .green-outer, .blue {
+                position:   absolute;
+                top:        50%;
+            }
+            .red {
+                background:  red;
+                left:          0;
+                height:      200px;
+                width:       100px;
+                margin-top: -100px;
+            }
+            .blue {
+                background:  blue;
+                right:       0;
+                height:      300px;
+                width:       100px;
+                margin-top: -150px;
+            }
+            .green-outer {
+                width:          100%;
+                height:        400px;
+                margin-top:   -200px;
+                margin-left:   110px;
+            }
+            .green {
+                margin-right:  220px;
+                background:    green;
+                height:        400px;
+                padding:       20px 0;
+            }
+
+
+            .row { 
+                width: 100%;
+                display:    block;
+                background: yellow;
+                border-top:    1px solid black;
+                border-bottom: 1px solid black;
+                padding: 10px 0;
+            }
+            .row .left {
+                text-indent: 10px;
+                width: 100px;
+                display: inline-block;
+            }
+            .row .center .bar {
+                display: inline-block;
+                width: 200px;
+                height: 10px;
+                background: purple;
+            }
+            .row .center .value {
+                display: inline-block;
+            }
+            .row .center {
+                display: inline-block;
+            }
+            .row .right {
+                width:   25px;
+                display: inline-block;
+            }
+
+
+
+            .clearfix:after {
+                content: ".";
+                display: block;
+                clear: both;
+                visibility: hidden;
+                line-height: 0;
+                height: 0;
+            }
+            .clearfix {
+                display: inline-block;
+            }
+            html[xmlns] .clearfix {
+                display: block;
+            }
+            * html .clearfix {
+                height: 1%;
+            }
+        </style>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+        <script>
+            $(window).bind("resize", function(event) {
+                $(".white").css("height", $(window).height() - 200);
+                $(".row .center").width( $(".row").width() - $(".row .left").width() - $(".row .right").width() - 10 );
+                $(".row .bar").each(function() {
+                    $(this).width( ($(this).parent().width() - 50) * $(this).next(".value").val()/100 );
+                });
+
+            })
+            $(document).ready(function() { 
+                $(window).trigger("resize");
+            });
+
+
+            var data = {
+                "Variable 1": 70,
+                "Variable 2": 60,
+                "Variable 3": 50 
+            }
+            $(".green").append("<ul></ul>");
+            for( var name in data ) {
+                $("<li><span class='name'></span><span></li>")
+            }
+
+        </script>
+    </head>
+    <body>
+        <div class="wrapper">
+            <div class="white">
+                <div class="green-outer">
+                    <div class="green">
+                        <div class="template">
+                            <div class="row clearfix">
+                                <div class="left">
+                                    <div class="name">Variable 1</div>
+                                </div>
+                                <div class="center">
+                                    <div class="bar"></div>
+                                    <div class="value">80%</div>
+                                </div>
+                                <div class="right">
+                                    <input type="checkbox"/>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="red"></div>
+                <div class="blue"></div>
+            </div>
+        </div>
+    </body>

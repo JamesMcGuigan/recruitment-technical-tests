@@ -1,0 +1,13 @@
+{
+  "name": "McKinsey Interview",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+  },
+  "dependencies": {
+      "async": "*",
+      "underscore": "*"
+  },
+  "devDependencies": {
+  }
+}

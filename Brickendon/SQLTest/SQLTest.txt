@@ -1,0 +1,175 @@
+-- 
+-- Introduction to the Problem
+-- 
+-- We have a database storing data including weather forecasts. Below are all the details you
+-- need of the table containing weather forecasts.
+-- 
+-- Table Name         WEATHER_FORECASTS 
+--                                                       Primary
+-- Column Name        Data Type              Nullable    Key    
+-- ID                 NUMBER                 No          Yes    
+-- SOURCE             VARCHAR2(20 BYTE)      No          
+-- LOCATION_ID        VARCHAR2(30 BYTE)      No       
+-- AS_OF_DATE         DATE                   No       
+-- FORECAST_DATE      DATE                   No       
+-- TEMP_MIN_C         NUMBER                 Yes      
+-- TEMP_MAX_C         NUMBER                 Yes      
+-- WIND_SPEED_KMH     NUMBER                 Yes      
+-- PRECIPITATION_MM   NUMBER                 Yes      
+-- 
+-- You can assume that ID is automatically generated using a sequence and trigger.
+
+DROP TABLE WEATHER_FORECASTS IF EXISTS;
+CREATE TABLE WEATHER_FORECASTS (
+    ID                   NUMBER          NOT NULL,
+    SOURCE               VARCHAR2(20)    NOT NULL,
+    LOCATION_ID          VARCHAR2(30)    NOT NULL,
+    AS_OF_DATE           DATE            NOT NULL,
+    FORECAST_DATE        DATE            NOT NULL,
+    TEMP_MIN_C           NUMBER              NULL,
+    TEMP_MAX_C           NUMBER              NULL,
+    WIND_SPEED_KMH       NUMBER              NULL,
+    PRECIPITATION_MM     NUMBER              NULL,
+    CONSTRAINT PK_ID     PRIMARY KEY (ID)
+);
+
+-- Autoincrement ID
+CREATE SEQUENCE WEATHER_FORECASTS_SEQ 
+       START WITH 1 
+       INCREMENT BY 1 
+       NOMAXVALUE; 
+
+CREATE OR REPLACE TRIGGER WEATHER_FORECASTS_AUTO_INC
+       BEFORE INSERT ON WEATHER_FORECASTS FOR EACH ROW
+       BEGIN
+           SELECT WEATHER_FORECASTS_SEQ.NEXTVAL 
+             INTO :NEW.ID 
+             FROM DUAL;
+       END;
+/
+
+DESCRIBE WEATHER_FORECASTS;
+
+-- Part 1
+-- 
+-- Each weather forecast should be unique for a given source, location, as of date and forecast date.
+-- 
+-- Write a script to modify the table to add a suitable constraint that prevents multiple
+-- forecasts being entered that break this uniqueness.
+
+ALTER TABLE WEATHER_FORECASTS 
+  ADD CONSTRAINT UK_FORECAST UNIQUE ( SOURCE, LOCATION_ID, AS_OF_DATE, FORECAST_DATE )
+  ENABLE;
+
+-- Test constraint has been added
+SELECT CONSTRAINT_NAME, TABLE_NAME, SEARCH_CONDITION, STATUS FROM USER_CONSTRAINTS WHERE TABLE_NAME = 'WEATHER_FORECASTS';
+SELECT CONSTRAINT_NAME, TABLE_NAME, SEARCH_CONDITION, STATUS FROM USER_CONSTRAINTS WHERE CONSTRAINT_NAME = 'UK_FORECAST';
+               
+
+-- Rounding display and to_date(sysdate) to nearest minute, else unique AS_OF_DATE constraint is fairly meaningless 
+ALTER SESSION SET NLS_DATE_FORMAT='YYYY-MM-DD:HH24:MI';
+
+-- Test constraint works in practice
+INSERT INTO WEATHER_FORECASTS ( SOURCE,           LOCATION_ID,    AS_OF_DATE,       FORECAST_DATE,                                      TEMP_MAX_C, TEMP_MIN_C,  WIND_SPEED_KMH,  PRECIPITATION_MM ) 
+                       VALUES ( 'WeatherStation', 'LondonBridge', to_date(sysdate), to_date('2012-02-25:12:00', 'yyyy-mm-dd:hh24:mi'),  6,          12,          8,               0                );
+
+INSERT INTO WEATHER_FORECASTS ( SOURCE,           LOCATION_ID,    AS_OF_DATE,       FORECAST_DATE,                                      TEMP_MAX_C, TEMP_MIN_C,  WIND_SPEED_KMH,  PRECIPITATION_MM ) 
+                       VALUES ( 'WeatherStation', 'LondonBridge', to_date(sysdate), to_date('2012-02-25:12:00', 'yyyy-mm-dd:hh24:mi'),  6,          12,          8,               0                );
+
+SELECT * FROM WEATHER_FORECASTS; 
+ 
+
+-- Part 2
+-- Below is the header for a procedure to upsert a single weather forecast into the table. This
+-- is in Oracle SQL but should be very similar to TSQL.
+
+
+-- Column referenced in upsert but not in initial spec, assumed to be foriegn key to unknown table
+ALTER TABLE WEATHER_FORECASTS ADD (
+    DATA_SOURCE_FILE_ID     NUMBER  NULL
+);
+DESCRIBE WEATHER_FORECASTS;
+
+CREATE OR REPLACE PROCEDURE UPSERT_WEATHER_FORECAST (
+    param_SOURCE_in                WEATHER_FORECASTS.SOURCE%TYPE,
+    param_LOCATION_ID_in           WEATHER_FORECASTS.LOCATION_ID%TYPE,
+    param_FORECAST_DATE_in         WEATHER_FORECASTS.FORECAST_DATE%TYPE,
+    param_TEMP_MAX_C_in            WEATHER_FORECASTS.TEMP_MAX_C%TYPE,
+    param_TEMP_MIN_C_in            WEATHER_FORECASTS.TEMP_MIN_C%TYPE,
+    param_WIND_SPEED_KMH_in        WEATHER_FORECASTS.WIND_SPEED_KMH%TYPE,
+    param_PRECIPITATION_MM_in      WEATHER_FORECASTS.PRECIPITATION_MM%TYPE,
+    param_DATA_SOURCE_FILE_ID_in   WEATHER_FORECASTS.DATA_SOURCE_FILE_ID%TYPE,
+    param_AS_OF_DATE_in            WEATHER_FORECASTS.AS_OF_DATE%TYPE
+)
+AS         
+    var_ID    WEATHER_FORECASTS.ID%TYPE;
+    var_COUNT NUMBER;
+BEGIN
+        
+    SELECT ID INTO var_ID
+      FROM WEATHER_FORECASTS 
+     WHERE SOURCE        = param_SOURCE_in
+       AND LOCATION_ID   = param_LOCATION_ID_in
+       AND AS_OF_DATE    = param_AS_OF_DATE_in 
+       AND FORECAST_DATE = param_FORECAST_DATE_in;
+       
+    DBMS_OUTPUT.ENABLE;   
+    DBMS_OUTPUT.PUT_LINE('UPDATE');
+    UPDATE WEATHER_FORECASTS
+       SET SOURCE              = param_SOURCE_in,
+           AS_OF_DATE          = param_AS_OF_DATE_in,
+           LOCATION_ID         = param_LOCATION_ID_in,
+           FORECAST_DATE       = param_FORECAST_DATE_in,
+           TEMP_MAX_C          = param_TEMP_MAX_C_in,
+           TEMP_MIN_C          = param_TEMP_MIN_C_in,
+           WIND_SPEED_KMH      = param_WIND_SPEED_KMH_in,
+           PRECIPITATION_MM    = param_PRECIPITATION_MM_in,
+           DATA_SOURCE_FILE_ID = param_DATA_SOURCE_FILE_ID_in
+     WHERE ID = var_ID;
+         
+EXCEPTION
+
+    WHEN NO_DATA_FOUND THEN
+        DBMS_OUTPUT.ENABLE;
+        DBMS_OUTPUT.PUT_LINE('INSERT');
+    
+    
+        INSERT INTO WEATHER_FORECASTS (
+            SOURCE,               
+            LOCATION_ID,          
+            AS_OF_DATE,            
+            FORECAST_DATE,        
+            TEMP_MAX_C,           
+            TEMP_MIN_C,           
+            WIND_SPEED_KMH,       
+            PRECIPITATION_MM,
+            DATA_SOURCE_FILE_ID     
+        ) VALUES (
+            param_SOURCE_in,                
+            param_LOCATION_ID_in, 
+            param_AS_OF_DATE_in,          
+            param_FORECAST_DATE_in,         
+            param_TEMP_MAX_C_in,            
+            param_TEMP_MIN_C_in,            
+            param_WIND_SPEED_KMH_in,        
+            param_PRECIPITATION_MM_in,
+            param_DATA_SOURCE_FILE_ID_in      
+        );
+    
+END;
+/
+
+-- Validate and test 
+SHOW ERRORS;
+
+DELETE FROM WEATHER_FORECASTS; 
+
+CALL UPSERT_WEATHER_FORECAST ( 'WeatherStation', 'LondonBridge', to_date('2012-02-25:12:00', 'yyyy-mm-dd:hh24:mi'), 1, 11, 111, 1111, 42, to_date(sysdate)  );
+SELECT * FROM WEATHER_FORECASTS;
+
+CALL UPSERT_WEATHER_FORECAST ( 'WeatherStation', 'LondonBridge', to_date('2012-02-25:12:00', 'yyyy-mm-dd:hh24:mi'), 2, 22, 222, 2222, 42, to_date(sysdate)  );
+SELECT * FROM WEATHER_FORECASTS;
+
+CALL UPSERT_WEATHER_FORECAST ( 'WeatherStation', 'LondonBridge', to_date('2012-02-25:12:00', 'yyyy-mm-dd:hh24:mi'), 3, 33, 333, 3333, 42, to_date(sysdate)  );
+SELECT * FROM WEATHER_FORECASTS;
+
