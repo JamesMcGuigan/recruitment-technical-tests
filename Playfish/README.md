@@ -1,3 +1,8 @@
+HTML Output:
+- https://htmlpreview.github.io/?https://github.com/JamesMcGuigan/recruitment-technical-tests/blob/master/Playfish/Simple/Playfish.html
+- https://htmlpreview.github.io/?https://github.com/JamesMcGuigan/recruitment-technical-tests/blob/master/Playfish/Extended/PlayfishLikeButton.html
+
+
 My solution to the problem posed is attached.
 
 1. The game should be able to display and hide a button at any time.

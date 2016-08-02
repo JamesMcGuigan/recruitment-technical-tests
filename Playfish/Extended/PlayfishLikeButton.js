@@ -63,7 +63,7 @@ Playfish.LikeButton.prototype.defaults = {
 
     parentNodeId:  "flashcontent",  // {String}  ID of flashcontent DIV, overridable via constructor param
     tagName:       "iframe",        // {String} TagName for like button
-    srcPrefix:     "http://www.facebook.com/plugins/like.php", // {String} script prefix
+    srcPrefix:     "https://www.facebook.com/plugins/like.php", // {String} script prefix
 
     //---- Initial offset position for element -----//
     position: {
