@@ -18,8 +18,9 @@ an SQL database, so the data from the event should be loaded in the following ta
 
 ## Questions:
  
-1. Using the data in the attached [bq-results-sample-data.json](bq-results-sample-data.json) file, create a script to load the data from the events into 
-the table above. You can use python, or any language you feel familiar with. 
+1. Using the data in the attached [bq-results-sample-data.jsons](bq-results-sample-data.jsons) file, 
+create a script to load the data from the events into the table above. You can use python, 
+or any language you feel familiar with. 
 Please provide instructions on how to run the script.
 
 2. How would you design the ETL process for it to automatically update daily?
