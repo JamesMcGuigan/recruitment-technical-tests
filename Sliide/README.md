@@ -17,7 +17,7 @@ an SQL database, so the data from the event should be loaded in the following ta
 
 
 Notes :
-1. TODO: event_date is UTC. Our users are based in the US.
+1. DONE: event_date is UTC. Our users are based in the US.  (Assumed Central)
 2. DONE: We say a user is active if the engagement time is at least 3 seconds and any valuable
 events occurred at least once
                     
@@ -46,40 +46,48 @@ On Insert:
 CREATE TABLE IF NOT EXISTS active_user_table (
     date              DATE    PRIMARY KEY,
     active_user_count INTEGER NOT NULL
-) WITHOUT ROWID;+ echo
+) WITHOUT ROWID;
 
 + ./count_user_engagements_by_date.sh
 + tee /dev/stderr
 + sqlite3 active_user_table.db
 
-++ cat ./data/bq-results-sample-data.jsons
-++ grep user_engagement
-++ perl -p -e 's/.*"event_date":.*?(\d+).*/$1/g'
-++ sort -n
-++ uniq -c
-++ awk '{
+
++ grep user_engagement
++ grep -P '"engagement_time_msec"\D+([3-9]|\d\d+)\d{3}'
++ grep -P '_event",'
++ perl -p -e 's/.*"event_timestamp":.*?(\d+).*/$1/g'
++ perl -p -e 's/\d{6}$//'
++ TZ=US/Central
++ xargs '-I{}' date -d '@{}' +%Y%m%d
++ sort -n
++ uniq -c
++ awk '{
         print "INSERT OR IGNORE INTO active_user_table     ( date, active_user_count ) VALUES ( "$2", 0 );";
         print "UPDATE                active_user_table SET active_user_count = active_user_count + "$1" WHERE date = "$2";";
     }'
++ cat
+INSERT OR IGNORE INTO active_user_table     ( date, active_user_count ) VALUES ( 20191229, 0 );
+UPDATE                active_user_table SET active_user_count = active_user_count + 11 WHERE date = 20191229;
 INSERT OR IGNORE INTO active_user_table     ( date, active_user_count ) VALUES ( 20191230, 0 );
-UPDATE                active_user_table SET active_user_count = active_user_count + 37 WHERE date = 20191230;
+UPDATE                active_user_table SET active_user_count = active_user_count + 31 WHERE date = 20191230;
 INSERT OR IGNORE INTO active_user_table     ( date, active_user_count ) VALUES ( 20191231, 0 );
-UPDATE                active_user_table SET active_user_count = active_user_count + 38 WHERE date = 20191231;
-+ echo
+UPDATE                active_user_table SET active_user_count = active_user_count + 22 WHERE date = 20191231;
+
 
 + echo 'SELECT * from active_user_table'
 + tee /dev/stderr
 + sqlite3 active_user_table.db -column -header
-
 SELECT * from active_user_table
 date        active_user_count
 ----------  -----------------
-20191230    37               
-20191231    38               
+20191229    11               
+20191230    31               
+20191231    22               
 
-real    0m0.118s
-user    0m0.091s
-sys     0m0.061s                                           
+real    0m0.517s
+user    0m0.202s
+sys     0m0.281s                                       
 ```
 
 On Update
@@ -90,12 +98,13 @@ On Update
 SELECT * from active_user_table
 date        active_user_count
 ----------  -----------------
-20191230    74               
-20191231    76               
+20191229    22               
+20191230    62               
+20191231    44               
 
-real    0m0.112s
-user    0m0.089s
-sys     0m0.057s
+real    0m0.482s
+user    0m0.192s
+sys     0m0.273s
 ```
 
 NOTES: 
@@ -122,24 +131,26 @@ Crontab will execute the script nightly
 **3. How would you scale this process if we got tens or hundreds of millions of events per day?**
 
 - Rather than batch mode, the script could read a unix pipe with the raw stream of events
-
-- Performance bottleneck here is probably the disk IO and the SSD drive. 
-
-- Keeping all the database and json datastream in memory may help performance optimize this
-
 - For this micro usecase of counting a single datafield, sqlite might actually be able to handle it!
+
+Depends on where the performance bottleneck is
+
+- CPU     - multiprocess using `xargs -P` or `gnu parallel`
+- RAM     - split SQL commands into smaller batches (or use smaller files)
+- Disk IO - Keep all data in memory, reimplement using Redis 
 
 
 **Bash Performance** 
 
 - Performance using INSERT OR UPDATE syntax was 0.12s per 1000 lines.
+    - Reduced to ~0.5s when timestamp parsing logic is implemented  
 
 - 100,000,000 / 1440 minutes = 70k lines per file * 0.12s = 8.4 seconds (2011 Macbook Pro)
+- 100,000,000 / 1440 minutes = 70k lines per file * 0.5s  = 35  seconds (with timestamp parsing)
 
-- Back of the envelope calculation suggests bash may scale to 7 billion events per day 
+- Back of the envelope calculation suggests bash may scale to billion events per day 
   - untested assumptions about linearity of scaling are unreasonable here 
-
-
+  - lots of variation when disk IO doesn't have the source file in memory
 
  
 **3. Suggest any target architecture to cater for this growth.**
