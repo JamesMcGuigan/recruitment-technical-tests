@@ -146,10 +146,12 @@ Depends on where the performance bottleneck is
     - Reduced to ~0.5s when timestamp parsing logic is implemented  
 
 - 100,000,000 / 1440 minutes = 70k lines per file * 0.12s = 8.4 seconds (2011 Macbook Pro)
+  - 1 minute / 8.4 seconds * 100,000,000 = 700 million events per day 
 - 100,000,000 / 1440 minutes = 70k lines per file * 0.5s  = 35  seconds (with timestamp parsing)
+  - 1 minute / 35 seconds * 100,000,000 = 170 million events per day
 
-- Back of the envelope calculation suggests bash may scale to billion events per day 
-  - untested assumptions about linearity of scaling are unreasonable here 
+- Back of the envelope calculation suggests bash may scale to hundreds of millions events per day 
+  - untested assumptions about linearity of loading and scaling are unreasonable here 
   - lots of variation when disk IO doesn't have the source file in memory
 
  
