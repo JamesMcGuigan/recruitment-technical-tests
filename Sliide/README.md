@@ -16,10 +16,10 @@ an SQL database, so the data from the event should be loaded in the following ta
 | active_user_count | INTEGER | REQUIRED |
 
 
-Notes (unimplemented):
-1. event_date is UTC. Our users are based in the US.
-2. We say a user is active if the engagement time is at least 3 seconds and any valuable
-events occurred at least once.
+Notes :
+1. TODO: event_date is UTC. Our users are based in the US.
+2. DONE: We say a user is active if the engagement time is at least 3 seconds and any valuable
+events occurred at least once
                     
 
 
@@ -31,7 +31,7 @@ feel familiar with. Please provide instructions on how to run the script.**
 
 
 Unix As A Programming Language: Bash
-```
+```bash
 # rm -vf Sliide/active_user_table.db  # reset database - if required
 time Sliide/active_user_table.import.sh
 ```
@@ -39,7 +39,7 @@ time Sliide/active_user_table.import.sh
 OUTPUT
 
 On Insert:
-```bash
+```
 + cat ./active_user_table.schema.sql
 + tee /dev/stderr
 + sqlite3 active_user_table.db
