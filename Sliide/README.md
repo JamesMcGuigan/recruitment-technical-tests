@@ -36,7 +36,9 @@ Unix As A Programming Language: Bash
 time Sliide/active_user_table.import.sh
 ```
 
-Output
+OUTPUT
+
+On Insert:
 ```bash
 + cat ./active_user_table.schema.sql
 + tee /dev/stderr
@@ -45,7 +47,6 @@ CREATE TABLE IF NOT EXISTS active_user_table (
     date              DATE    PRIMARY KEY,
     active_user_count INTEGER NOT NULL
 ) WITHOUT ROWID;+ echo
-
 
 + ./count_user_engagements_by_date.sh
 + tee /dev/stderr
@@ -56,11 +57,15 @@ CREATE TABLE IF NOT EXISTS active_user_table (
 ++ perl -p -e 's/.*"event_date":.*?(\d+).*/$1/g'
 ++ sort -n
 ++ uniq -c
-++ awk '{ print "REPLACE INTO active_user_table ( date, active_user_count ) VALUES( "$2", "$1" );" }'
-REPLACE INTO active_user_table ( date, active_user_count ) VALUES( 20191230, 37 );
-REPLACE INTO active_user_table ( date, active_user_count ) VALUES( 20191231, 38 );
+++ awk '{
+        print "INSERT OR IGNORE INTO active_user_table     ( date, active_user_count ) VALUES ( "$2", 0 );";
+        print "UPDATE                active_user_table SET active_user_count = active_user_count + "$1" WHERE date = "$2";";
+    }'
+INSERT OR IGNORE INTO active_user_table     ( date, active_user_count ) VALUES ( 20191230, 0 );
+UPDATE                active_user_table SET active_user_count = active_user_count + 37 WHERE date = 20191230;
+INSERT OR IGNORE INTO active_user_table     ( date, active_user_count ) VALUES ( 20191231, 0 );
+UPDATE                active_user_table SET active_user_count = active_user_count + 38 WHERE date = 20191231;
 + echo
-
 
 + echo 'SELECT * from active_user_table'
 + tee /dev/stderr
@@ -70,22 +75,40 @@ SELECT * from active_user_table
 date        active_user_count
 ----------  -----------------
 20191230    37               
-20191231    38   
+20191231    38               
 
+real    0m0.118s
+user    0m0.091s
+sys     0m0.061s                                           
+```
 
-real    0m0.169s
-user    0m0.129s
-sys     0m0.085s                                                 
+On Update
+```
++ echo 'SELECT * from active_user_table'
++ tee /dev/stderr
++ sqlite3 active_user_table.db -column -header
+SELECT * from active_user_table
+date        active_user_count
+----------  -----------------
+20191230    74               
+20191231    76               
+
+real    0m0.112s
+user    0m0.089s
+sys     0m0.057s
 ```
 
 NOTES: 
 
 - Assumes .jsons format (one json per newline)
-- REPLACE SQL syntax assumes:
+
+- UPDATE syntax allows for incremental updates
+  - Assumes duplicate data will not be ingested 
+
+- (OLD) REPLACE SQL syntax assumes:
   - dataset will only contain data for entire days (not partial days)
-  - script can be run midday and will update partial TODAY (assuming rerun at midnight)
-
-
+  - script can be run at midday then at midnight to update TODAY   
+  - script can be rerun multiple times on stale data
 
 
 
@@ -98,40 +121,36 @@ Crontab will execute the script nightly
 
 **3. How would you scale this process if we got tens or hundreds of millions of events per day?**
 
-UPDATE syntax would allow for incremental updates, with the crontab set to run every minute  
-```
-UPDATE active_user_table SET active_user_count = active_user_count + $2 WHERE date = $1
-```
-
 - Rather than batch mode, the script could read a unix pipe with the raw stream of events
 
 - Performance bottleneck here is probably the disk IO and the SSD drive. 
 
 - Keeping all the database and json datastream in memory may help performance optimize this
 
+- For this micro usecase of counting a single datafield, sqlite might actually be able to handle it!
+
 
 **Bash Performance** 
 
-- Performance using REPLACE syntax was 0.17s per 1000 lines.
+- Performance using INSERT OR UPDATE syntax was 0.12s per 1000 lines.
 
-- 100,000,000 / 1440 minutes = 70k lines per file * 0.17s = 11.9 seconds (2011 Macbook Pro)
+- 100,000,000 / 1440 minutes = 70k lines per file * 0.12s = 8.4 seconds (2011 Macbook Pro)
 
-- Back of the envelope calculation suggests bash may scale to 5 billion events per day 
+- Back of the envelope calculation suggests bash may scale to 7 billion events per day 
   - untested assumptions about linearity of scaling are unreasonable here 
+
+
 
  
 **3. Suggest any target architecture to cater for this growth.**
 
-- For this micro usecase of counting a single datafield, sqlite might actually be able to handle it!
-
-- The rest of your tech stack might require a database cluster (MS SQL, MySQL, Oracle, OrientDB) or Cloud SQL 
+- The rest of your tech stack might require a proper database cluster (MS SQL, MySQL, Oracle, OrientDB) or Cloud SQL 
 
 - Alternatively you could ingest all your event data into an ElasticSearch cluster then run HyperLogLog to do your counting for you in realtime
 
-- Else is the correct answer to reference the Lambda Architecture Book
+- Was the correct answer to reference the Lambda Architecture Book
   - https://www.amazon.co.uk/Big-Data-Principles-practices-scalable/dp/1617290343
   
-
 
 
 **We expect the result as a github repository. Please leave the commit history in.**

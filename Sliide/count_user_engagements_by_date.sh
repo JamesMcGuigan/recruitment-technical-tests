@@ -9,11 +9,15 @@ cat ./data/bq-results-sample-data.jsons |
     perl -p -e 's/.*"event_date":.*?(\d+).*/$1/g' |
     sort -n |
     uniq -c |
-    awk  '{ print "REPLACE INTO active_user_table ( date, active_user_count ) VALUES( "$2", "$1" );" }'
-    # awk  '{ print "UPDATE active_user_table SET active_user_count = active_user_count + "$1" WHERE date = "$2";" }'
-
+    # awk  '{ print "REPLACE INTO active_user_table ( date, active_user_count ) VALUES( "$2", "$1" );" }' |
+    awk  '{
+        print "INSERT OR IGNORE INTO active_user_table     ( date, active_user_count ) VALUES ( "$2", 0 );";
+        print "UPDATE                active_user_table SET active_user_count = active_user_count + "$1" WHERE date = "$2";";
+    }'
 
 # Outputs:
-# REPLACE INTO active_user_table ( date, active_user_count ) VALUES( 20191230, 37 );
-# REPLACE INTO active_user_table ( date, active_user_count ) VALUES( 20191231, 38 );
+# INSERT OR IGNORE INTO active_user_table     ( date, active_user_count ) VALUES ( 20191230, 0 );
+# UPDATE                active_user_table SET active_user_count = active_user_count + 37 WHERE date = 20191230;
+# INSERT OR IGNORE INTO active_user_table     ( date, active_user_count ) VALUES ( 20191231, 0 );
+# UPDATE                active_user_table SET active_user_count = active_user_count + 38 WHERE date = 20191231;
 
